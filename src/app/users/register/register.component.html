@@ -1,0 +1,74 @@
+<div class="register-container">
+  <h2>Register</h2>
+  
+  <!-- Display global error message if submission fails -->
+  <div *ngIf="submissionError" class="alert alert-danger">
+    {{ submissionError }}
+  </div>
+
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="firstName">First Name</label>
+      <input id="firstName" formControlName="firstName" type="text" class="form-control" />
+      <div *ngIf="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.invalid">
+        <small class="text-danger" *ngIf="registerForm.get('firstName')?.errors?.['required']">First Name is required.</small>
+        <small class="text-danger" *ngIf="registerForm.get('firstName')?.errors?.['minlength']">First Name must be at least 2 characters long.</small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="lastName">Last Name</label>
+      <input id="lastName" formControlName="lastName" type="text" class="form-control" />
+      <div *ngIf="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.invalid">
+        <small class="text-danger" *ngIf="registerForm.get('lastName')?.errors?.['required']">Last Name is required.</small>
+        <small class="text-danger" *ngIf="registerForm.get('lastName')?.errors?.['minlength']">Last Name must be at least 2 characters long.</small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input id="email" formControlName="email" type="email" class="form-control" />
+      <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+        <small class="text-danger" *ngIf="registerForm.get('email')?.errors?.['required']">Email is required.</small>
+        <small class="text-danger" *ngIf="registerForm.get('email')?.errors?.['email']">Invalid email format.</small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="loginId">Login ID</label>
+      <input id="loginId" formControlName="loginId" type="text" class="form-control" />
+      <div *ngIf="registerForm.get('loginId')?.touched && registerForm.get('loginId')?.invalid">
+        <small class="text-danger" *ngIf="registerForm.get('loginId')?.errors?.['required']">Login ID is required.</small>
+        <small class="text-danger" *ngIf="registerForm.get('loginId')?.errors?.['minlength']">Login ID must be at least 4 characters long.</small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <div class="input-group">
+        <input 
+          id="password" 
+          [type]="showPassword ? 'text' : 'password'" 
+          formControlName="password" 
+          class="form-control" 
+        />
+      </div>
+      <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+        <small class="text-danger" *ngIf="registerForm.get('password')?.errors?.['required']">Password is required.</small>
+        <small class="text-danger" *ngIf="registerForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters long.</small>
+      </div>
+    </div>
+    
+
+    <div class="form-group">
+      <label for="contact">Contact</label>
+      <input id="contact" formControlName="contact" type="text" class="form-control" />
+      <div *ngIf="registerForm.get('contact')?.touched && registerForm.get('contact')?.invalid">
+        <small class="text-danger" *ngIf="registerForm.get('contact')?.errors?.['required']">Contact is required.</small>
+        <small class="text-danger" *ngIf="registerForm.get('contact')?.errors?.['pattern']">Contact must be a 10-digit number.</small>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="registerForm.invalid">Register</button>
+  </form>
+</div>

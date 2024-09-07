@@ -1,0 +1,56 @@
+<div class="blog-list-container">
+    <h2>Blog List</h2>
+  
+    <!-- Search bar and filter inputs -->
+    <div class="search-bar">
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery" 
+        (input)="onSearch()" 
+        placeholder="Search blogs..." 
+        class="search-input" />
+  
+      <!-- Date range inputs -->
+      <div class="date-range">
+        <div class="date-range-row">
+          <div class="date-range-item">
+            <label for="fromDate">From Date</label>
+            <input 
+              type="date" 
+              id="fromDate" 
+              [(ngModel)]="fromDate" 
+              (change)="onSearch()" />
+          </div>
+          <div class="date-range-item">
+            <label for="toDate">To Date</label>
+            <input 
+              type="date" 
+              id="toDate" 
+              [(ngModel)]="toDate" 
+              (change)="onSearch()" />
+          </div>
+        </div>
+      </div>
+  
+      <!-- Action buttons -->
+      <div class="button-container">
+        <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+        <button *ngIf="isLoggedIn()" class="btn btn-primary" (click)="onAddBlog()" #addButton>Add Blog</button>
+        <button class="btn btn-primary" (click)="showMyBlogs()">My Blogs</button>
+      </div>
+    </div>
+  
+    <!-- No blogs message -->
+    <div *ngIf="filteredBlogs.length === 0" class="no-blogs">
+      <p>No blogs found.</p>
+    </div>
+  
+    <!-- Blog list -->
+    <app-child-blog 
+      *ngFor="let blog of filteredBlogs" 
+      [blog]="blog" 
+      (edit)="onEdit(blog)" 
+      (delete)="onDelete(blog)"
+      [showEditDeleteButtons]="showEditDeleteButtons">
+    </app-child-blog>
+  </div>

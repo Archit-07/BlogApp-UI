@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>{{ data.blogName ? 'Edit Blog' : 'Add Blog' }}</h2>
+<div mat-dialog-content>
+  <mat-form-field>
+    <input matInput placeholder="Blog Name" [(ngModel)]="blogName" />
+  </mat-form-field>
+  <mat-form-field>
+    <input matInput placeholder="Category" [(ngModel)]="category" />
+  </mat-form-field>
+  <mat-form-field>
+    <textarea matInput placeholder="Article" [(ngModel)]="article"></textarea>
+  </mat-form-field>
+  <mat-form-field>
+    <input matInput placeholder="Author Name" [(ngModel)]="authorName" />
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onSave()">Save</button>
+</div>

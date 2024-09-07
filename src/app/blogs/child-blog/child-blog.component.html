@@ -1,0 +1,12 @@
+<div class="blog-card">
+  <h3>{{ blog.blogName }}</h3>
+  <p>{{ blog.category }}</p>
+  <p>{{ blog.article }}</p>
+  <p>{{ blog.authorName }}</p>
+  <p>{{ blog.createdAt | date }}</p>
+
+  <div *ngIf="showEditDeleteButtons">
+    <button class="btn btn-secondary" (click)="onEdit()">Edit</button>
+    <button class="btn btn-danger" (click)="onDelete()">Delete</button>
+  </div>
+</div>
