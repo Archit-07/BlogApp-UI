@@ -2,8 +2,8 @@ import { Component, ElementRef, OnInit, ViewChild, OnDestroy } from '@angular/co
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AddBlogDialogComponent } from '../add-blog-dialog/add-blog-dialog.component';
-import { AuthService, Blog } from '../../../app/services/auth.service'; // Import Blog interface
-import { Subscription, interval } from 'rxjs'; // Import interval and Subscription
+import { AuthService, Blog } from '../../../app/services/auth.service';
+import { Subscription, interval } from 'rxjs';
 
 @Component({
   selector: 'app-blog-list',
@@ -20,11 +20,12 @@ export class BlogListComponent implements OnInit, OnDestroy {
   searchQuery: string = '';
   fromDate: Date | null = null;
   toDate: Date | null = null;
-  currentUser: string = ''; // Get the current logged-in user
+  currentUser: string = ''; 
   showEditDeleteButtons: boolean = false;
-  isMyBlogsView: boolean = false; // New flag to track if we're in "My Blogs" view
+  isMyBlogsView: boolean = false; 
 
-  refreshSubscription: Subscription | undefined; // For automatic refreshing
+  refreshSubscription: Subscription | undefined; 
+  autoFetchEnabled: boolean = true; // Flag to control auto-fetching
 
   constructor(
     private router: Router,
@@ -33,30 +34,35 @@ export class BlogListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Get the current user
     const userData = this.authService.getUser();
     this.currentUser = userData.loginId;
 
-    // Fetch blogs initially
     this.fetchBlogs();
 
-    // Set up an interval to fetch blogs every 5 seconds
+    this.startAutoFetching();
+  }
+
+  startAutoFetching(): void {
     this.refreshSubscription = interval(5000).subscribe(() => {
-      this.fetchBlogs();
+      if (this.autoFetchEnabled) {
+        this.fetchBlogs();
+      }
     });
+  }
+
+  stopAutoFetching(): void {
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
   }
 
   fetchBlogs(): void {
     this.authService.getAllBlog().subscribe({
       next: (blogs: Blog[]) => {
         this.blogs = blogs;
-
-        // Apply filtering based on "My Blogs" view flag
-        if (this.isMyBlogsView) {
-          this.filteredBlogs = this.blogs.filter(blog => blog.user === this.currentUser);
-        } else {
-          this.filteredBlogs = blogs;
-        }
+        this.filteredBlogs = this.isMyBlogsView 
+          ? this.blogs.filter(blog => blog.user === this.currentUser) 
+          : blogs;
       },
       error: (err) => {
         console.error('Error fetching blogs:', err);
@@ -65,11 +71,11 @@ export class BlogListComponent implements OnInit, OnDestroy {
   }
 
   onSearch(): void {
+    this.autoFetchEnabled = false; // Stop auto-fetching while searching
     const searchQueryLower = this.searchQuery.toLowerCase();
 
     this.filteredBlogs = this.blogs.filter(blog => {
       const blogDate = new Date(blog.createdAt);
-
       const matchesSearchQuery = this.searchQuery
         ? blog.blogName.toLowerCase().includes(searchQueryLower) ||
           blog.article.toLowerCase().includes(searchQueryLower) ||
@@ -77,7 +83,6 @@ export class BlogListComponent implements OnInit, OnDestroy {
         : true;
 
       const matchesDateRange = this.matchesDateRange(blogDate);
-
       return matchesSearchQuery && matchesDateRange;
     });
 
@@ -95,17 +100,20 @@ export class BlogListComponent implements OnInit, OnDestroy {
     this.searchQuery = '';
     this.fromDate = null;
     this.toDate = null;
-    this.isMyBlogsView = false; // Reset the "My Blogs" view flag
+    this.isMyBlogsView = false; 
     this.filteredBlogs = this.blogs;
     this.showEditDeleteButtons = false;
+
+    this.autoFetchEnabled = true; // Re-enable auto-fetching after clearing filters
+    this.startAutoFetching();
   }
 
   isLoggedIn(): boolean {
-    return this.authService.isLoggedIn(); // Checks if the token exists
+    return this.authService.isLoggedIn(); 
   }
 
   onAddBlog(): void {
-    this.openBlogDialog(); // Pass undefined for adding a new blog
+    this.openBlogDialog(); 
   }
 
   openBlogDialog(blog?: Blog): void {
@@ -136,7 +144,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
   }
 
   showMyBlogs(): void {
-    this.isMyBlogsView = true; // Set the "My Blogs" view flag
+    this.isMyBlogsView = true; 
     this.filteredBlogs = this.blogs.filter(blog => blog.user === this.currentUser);
     this.showEditDeleteButtons = true;
   }
@@ -152,10 +160,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Clear interval when the component is destroyed
   ngOnDestroy(): void {
-    if (this.refreshSubscription) {
-      this.refreshSubscription.unsubscribe();
-    }
+    this.stopAutoFetching();
   }
 }
