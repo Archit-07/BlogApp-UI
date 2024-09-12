@@ -1,29 +1,69 @@
-import { TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing'; // Import RouterTestingModule
+import { AuthService } from './services/auth.service';
 import { AppComponent } from './app.component';
 
-describe('AppComponent', () => {
-  beforeEach(() => TestBed.configureTestingModule({
-    imports: [RouterTestingModule],
-    declarations: [AppComponent]
-  }));
+fdescribe('AppComponent', () => {
+  let component: AppComponent;
+  let fixture: ComponentFixture<AppComponent>;
+  let authServiceMock: any;
+  let routerMock: any;
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+  beforeEach(async () => {
+    authServiceMock = jasmine.createSpyObj('AuthService', ['isLoggedIn', 'logout']);
+    routerMock = jasmine.createSpyObj('Router', ['navigate']);
+    routerMock.url = '/blogs'; // Default URL for router mock
+
+    await TestBed.configureTestingModule({
+      declarations: [AppComponent],
+      imports: [RouterTestingModule], // Import RouterTestingModule
+      providers: [
+        { provide: AuthService, useValue: authServiceMock },
+        { provide: Router, useValue: routerMock }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
   });
 
-  it(`should have as title 'BlogApp-UI'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('BlogApp-UI');
+  describe('isLoggedIn', () => {
+    it('should return the result of authService.isLoggedIn()', () => {
+      authServiceMock.isLoggedIn.and.returnValue(true);
+
+      expect(component.isLoggedIn()).toBe(true);
+
+      authServiceMock.isLoggedIn.and.returnValue(false);
+
+      expect(component.isLoggedIn()).toBe(false);
+    });
   });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('BlogApp-UI app is running!');
+  describe('isBlogsPage', () => {
+    it('should return true if the current route is /blogs', () => {
+      routerMock.url = '/blogs'; // Set URL to /blogs
+      expect(component.isBlogsPage()).toBe(true);
+    });
+
+    it('should return false if the current route is not /blogs', () => {
+      routerMock.url = '/other-page'; // Set URL to a different route
+      expect(component.isBlogsPage()).toBe(false);
+    });
+  });
+
+  describe('onLogout', () => {
+    it('should call authService.logout() and navigate to /users/login', () => {
+      component.onLogout();
+      expect(authServiceMock.logout).toHaveBeenCalled();
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/users/login']);
+    });
+  });
+
+  describe('onLogin', () => {
+    it('should navigate to /users/login', () => {
+      component.onLogin();
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/users/login']);
+    });
   });
 });

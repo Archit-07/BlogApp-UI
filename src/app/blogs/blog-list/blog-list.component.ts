@@ -1,5 +1,4 @@
 import { Component, ElementRef, OnInit, ViewChild, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AddBlogDialogComponent } from '../add-blog-dialog/add-blog-dialog.component';
 import { AuthService, Blog } from '../../../app/services/auth.service';
@@ -11,8 +10,6 @@ import { Subscription, interval } from 'rxjs';
   styleUrls: ['./blog-list.component.scss'],
 })
 export class BlogListComponent implements OnInit, OnDestroy {
-  private addBlogDialogRef: MatDialogRef<AddBlogDialogComponent> | null = null;
-
   @ViewChild('addButton') addButton: ElementRef<HTMLButtonElement> | undefined;
 
   blogs: Blog[] = [];
@@ -27,8 +24,9 @@ export class BlogListComponent implements OnInit, OnDestroy {
   refreshSubscription: Subscription | undefined; 
   autoFetchEnabled: boolean = true; // Flag to control auto-fetching
 
+  private ws: WebSocket | undefined;
+
   constructor(
-    private router: Router,
     private dialog: MatDialog,
     private authService: AuthService
   ) {}
@@ -38,8 +36,8 @@ export class BlogListComponent implements OnInit, OnDestroy {
     this.currentUser = userData.loginId;
 
     this.fetchBlogs();
-
     this.startAutoFetching();
+    this.setupWebSocket();
   }
 
   startAutoFetching(): void {
@@ -128,17 +126,13 @@ export class BlogListComponent implements OnInit, OnDestroy {
       if (result) {
         if (blog) {
           this.authService.updateBlog(result).subscribe(() => {
-            const index = this.blogs.findIndex(b => b._id === blog._id);
-            if (index > -1) {
-              this.blogs[index] = result;
-            }
+            this.fetchBlogs(); // Re-fetch blogs to ensure the UI is updated
           });
         } else {
           this.authService.addBlog(result).subscribe(() => {
-            this.blogs.push(result);
+            this.fetchBlogs(); // Re-fetch blogs to ensure the UI is updated
           });
         }
-        this.filteredBlogs = this.blogs;
       }
     });
   }
@@ -155,12 +149,43 @@ export class BlogListComponent implements OnInit, OnDestroy {
 
   onDelete(blog: Blog): void {
     this.authService.deleteBlog(blog).subscribe(() => {
-      this.blogs = this.blogs.filter(b => b._id !== blog._id);
-      this.filteredBlogs = this.blogs;
+      this.fetchBlogs(); // Re-fetch blogs to ensure the UI is updated
     });
+  }
+
+  private setupWebSocket(): void {
+    this.ws = new WebSocket('ws://localhost:8080');
+  
+    this.ws.onopen = () => {
+      console.log('WebSocket connection established');
+    };
+  
+    this.ws.onmessage = (event) => {
+      console.log('Message received from WebSocket:', event.data);
+      try {
+        const blog: Blog = JSON.parse(event.data);
+        console.log('Parsed blog data:', blog);
+        // Optionally, you can process the blog data directly
+        // For example, update the local blog list to be implemented
+        this.fetchBlogs();
+      } catch (e) {
+        console.error('Error parsing WebSocket message:', e);
+      }
+    };
+  
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  
+    this.ws.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
   }
 
   ngOnDestroy(): void {
     this.stopAutoFetching();
+    if (this.ws) {
+      this.ws.close();
+    }
   }
 }
